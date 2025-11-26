@@ -1,0 +1,1 @@
+XChainAnomaly aims to detect cross-chain transactions containing illicit funds. The project aims to collect data using XChainDataGen, label this data based on various heuristics, then compare different features and different supervised and unsupervised machine learning algorithms, to correctly classify unseen cross-chain transactions.
