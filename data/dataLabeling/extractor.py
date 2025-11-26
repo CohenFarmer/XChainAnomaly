@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import requests
 from typing import Any, Dict, List
 from datetime import datetime, timezone
@@ -51,11 +53,12 @@ def parse_token_transfers(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def get_transactions(page: int) -> None:
+	load_dotenv()
 	url = (
 		"https://api.covalenthq.com/v1/eth-mainnet/address/"
 		f"0xeba3626cbff1762435564daa64be9cb5d3e32c06/transactions_v3/page/{page}/"
 	)
-	headers = {"Authorization": "Bearer cqt_rQPFfJBfkMyx76yqyBxDHC9vxMtq"}
+	headers = {f"Authorization": f"Bearer {os.getenv('GOLD_RUSH_API_KEY')}"}
 	response = requests.get(url, headers=headers)
 	data = response.json()
 
