@@ -10,4 +10,4 @@ baseColumns = ["id", "src_blockchain", "src_transaction_hash",
            "dst_transaction_hash", "dst_from_address", "dst_to_address",
            "dst_fee", "dst_fee_usd", "dst_timestamp", "dst_contract_address",
            "input_amount", "input_amount_usd", "output_amount",
-           "output_amount_usd", "bridge_name"]
+           "output_amount_usd", "bridge_name", "depositor", "recipient"]

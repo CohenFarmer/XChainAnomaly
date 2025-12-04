@@ -24,12 +24,12 @@ class dataConcat(object):
         combined_df = pd.concat(dataframes, ignore_index=True)
         return combined_df
     
-    def getCSVPaths(self):
+    def getCSVPaths(self) -> str:
         load_dotenv()
         return os.getenv("CSV_PATHS")
 
 #can only combine bridges that have csv files of their data, also very important that
 #the columns names are renamed to match base columns
-combineData = dataConcat(bridges=['stargate', 'across'])
+combineData = dataConcat(bridges=['across'])
 df = combineData.combine_bridge_datasets()
-df.to_parquet("datasets/cross_chain_unified.parquet", engine='pyarrow', index=False)
+df.to_parquet("data/datasets/cross_chain_unified.parquet", engine='pyarrow', index=False)
