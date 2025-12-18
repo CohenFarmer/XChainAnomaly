@@ -7,7 +7,6 @@ from data.helpers.alchemyAPI import alchemyClient
 from datetime import datetime, timezone
 from threading import Lock
 
-# Simple in-memory cache of computed address features per chain
 feature_cache = {}
 cache_lock = Lock()
 
@@ -64,7 +63,6 @@ def collect_transfer_data(transfer, total_value, count_tx_over_1_eth, count_tx_o
     return total_value, count_tx_over_1_eth, count_tx_over_10_eth, min_tx_val, max_tx_val, earliest_timestamp, latest_timestamp
 
 def compute_address_features(address: str, label: int, chain: str, source_index: int, role: str):
-    # Check cache first
     key = (str(address).lower(), str(chain).lower())
     with cache_lock:
         cached = feature_cache.get(key)
@@ -119,7 +117,6 @@ def compute_address_features(address: str, label: int, chain: str, source_index:
     avg_value = total_value / total_transfers if total_transfers > 0 else 0
     time_active  = latest_timestamp - earliest_timestamp
     avg_time_between_transactions = (time_active) / total_transfers if total_transfers > 0 else 0
-    # Build full result
     result = {
         "source_index": int(source_index),
         "role": role,
@@ -143,11 +140,10 @@ def compute_address_features(address: str, label: int, chain: str, source_index:
         "label": label,
     }
 
-    # Store computed features in cache (without provenance fields or dynamic label)
     base = dict(result)
     base["source_index"] = 0
     base["role"] = ""
-    # label in cache is not meaningful; set to 0
+    
     base["label"] = 0
     with cache_lock:
         feature_cache[key] = base

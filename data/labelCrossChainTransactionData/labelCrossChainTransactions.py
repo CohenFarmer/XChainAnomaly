@@ -18,7 +18,6 @@ recip_col = 'recipient' if 'recipient' in df_with_only_supported_chains.columns 
 src_lower = df_with_only_supported_chains[src_col].fillna('').str.lower()
 recip_lower = df_with_only_supported_chains[recip_col].fillna('').str.lower()
 
-# Match against EOA addresses that interacted with Tornado Cash
 tornado_interacted_df = pd.read_csv('data/datasets/tornado_cash_interacted_addresses_eth.csv')
 interacted = set(tornado_interacted_df['tornado_interacted_address'].astype(str).str.lower())
 

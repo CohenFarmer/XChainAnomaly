@@ -69,7 +69,6 @@ def test_model(model, X_test, y_test, binary: bool | None = None, threshold: flo
         if isinstance(proba, np.ndarray) and proba.ndim == 2 and proba.shape[1] >= 2:
             y_pred = (proba[:, 1] >= threshold).astype(int)
         else:
-            # Fallback to predict if probabilities are not in expected shape
             raw_pred = model.predict(X_test)
             y_pred = raw_pred if raw_pred.ndim == 1 else raw_pred.argmax(axis=1)
     else:

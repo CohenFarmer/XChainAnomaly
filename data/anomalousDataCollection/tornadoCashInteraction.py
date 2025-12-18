@@ -16,7 +16,6 @@ class tornadoInteraction:
     def load_tornado_addresses(self) -> np.ndarray:
         tornado_addresses = pd.read_csv('data/datasets/malicious_address_all.csv')
         arr = tornado_addresses['address'].astype(str).map(self.normalize_address).to_numpy()
-        # Ensure sorted array for binary search via searchsorted
         arr.sort()
         return arr
     
