@@ -1,2 +1,14 @@
+# Large single files to ignore (keep smaller datasets tracked)
 data/datasets/cross_chain_unified.parquet
+data/datasets/labeled_cross_chain_transactions.csv
 data/datasets/sdn_advanced.xml
+
+# Caches and environments
+**/__pycache__/
+*.pyc
+.venv/
+**/.ipynb_checkpoints/
+
+# OS/editor junk
+.DS_Store
+*.log

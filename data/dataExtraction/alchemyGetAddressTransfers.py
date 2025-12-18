@@ -43,7 +43,7 @@ class getAddressTransfers:
                     "fromBlock": "0x0",
                     "toBlock": "latest",
                     "withMetadata": True,
-                    "excludeZeroValue": False,
+                    "excludeZeroValue": True,
                     "maxCount": "0x3e8",
                     "category": ["external"],
                     "pageKey": "0x0"
