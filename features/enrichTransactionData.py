@@ -1,6 +1,6 @@
 import pandas as pd
-import xgboost as xgb
 import numpy as np
+import joblib
 
 cctx_tx_data = pd.read_csv('features/datasets/cross_chain_labeled_transactions_balanced_50k.csv')
 
@@ -23,8 +23,7 @@ print(cctx_recipient_tx_data.head(10))
 
 print(len(cctx_src_from_tx_data), len(cctx_recipient_tx_data), len(cctx_tx_data))
 
-xgb_model = xgb.XGBClassifier()
-xgb_model.load_model('machineLearning/models/xgboost_address_transfer_model_eth_3.json')
+rf_model = joblib.load('machineLearning/models/random_forest_address_transfer_model_eth_3.joblib')
 
 src_indices = cctx_src_from_tx_data['source_index'].to_numpy()
 rec_indices = cctx_recipient_tx_data['source_index'].to_numpy()
@@ -35,8 +34,8 @@ rec_address = cctx_recipient_tx_data['address'].to_numpy()
 X_src_from = cctx_src_from_tx_data.drop(columns=['address', 'label', 'role', 'source_index'])
 X_recipient = cctx_recipient_tx_data.drop(columns=['address', 'label', 'role', 'source_index'])
 
-y_pred_src_from = xgb_model.predict_proba(X_src_from)
-y_prec_recipient = xgb_model.predict_proba(X_recipient)
+y_pred_src_from = rf_model.predict_proba(X_src_from)
+y_prec_recipient = rf_model.predict_proba(X_recipient)
 
 results_src = pd.DataFrame(y_pred_src_from, columns=[f'src_prob_class_{i}' for i in range(y_pred_src_from.shape[1])])
 results_src['source_index'] = src_indices
@@ -62,7 +61,7 @@ enriched = (
 		.merge(rec_probs, on='source_index', how='left')
 )
 
-out_path = 'features/datasets/cross_chain_labeled_transactions_enriched_probs.csv'
+out_path = 'features/datasets/cross_chain_labeled_transactions_enriched_probs_rf.csv'
 prob_cols = [c for c in enriched.columns if c.startswith('src_prob_class_') or c.startswith('rec_prob_class_')]
 before_ct = len(enriched)
 if prob_cols:

@@ -7,12 +7,13 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import class_weight
 from xgboost.callback import EarlyStopping
 from sklearn.metrics import make_scorer, f1_score
-from machineLearning.supervisedModels import train_xgboost_model, test_xgboost_model
+from machineLearning.supervisedModels import train_xgboost_model, test_model, train_random_forest_model, train_logistic_regression_model
+import joblib
 
 dataset = pd.read_csv('features/datasets/address_transfer_features_eth_3.csv')
 
 test_size = 0.33
-seed = 40
+seed = 45
 
 X = dataset.drop(columns=['label', 'address'])
 
@@ -25,5 +26,10 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced', class
 class_to_weight = {c: w for c, w in zip(classes, class_weights)}
 sample_weights = np.array([class_to_weight[label] for label in y_train])
 
-xgbModel = train_xgboost_model(X_train, y_train, sample_weights=sample_weights, binary=False)
-test_xgboost_model(xgbModel, X_test, y_test, binary=False)
+random_forest = train_random_forest_model(X_train, y_train, sample_weights=sample_weights, binary=False)
+
+test_model(random_forest, X_test, y_test, binary=False)
+
+save_path = 'machineLearning/models/random_forest_address_transfer_model_eth_3.joblib'
+joblib.dump(random_forest, save_path)
+print(f"Model saved to {save_path}")

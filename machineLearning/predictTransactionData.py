@@ -9,7 +9,7 @@ from xgboost.callback import EarlyStopping
 from sklearn.metrics import make_scorer, f1_score
 from machineLearning.supervisedModels import train_xgboost_model, test_model, train_logistic_regression_model, train_random_forest_model
 
-dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs.csv')
+dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs_rf.csv')
 
 test_size = 0.33
 seed = 40
@@ -25,13 +25,11 @@ class_weights = class_weight.compute_class_weight(class_weight='balanced', class
 class_to_weight = {c: w for c, w in zip(classes, class_weights)}
 sample_weights = np.array([class_to_weight[label] for label in y_train])
 
-#xgbModel = train_xgboost_model(X_train, y_train, sample_weights=sample_weights, binary=True)
-#lrModel = train_logistic_regression_model(X_train, y_train, sample_weights=sample_weights, binary=True)
-rfModel = train_random_forest_model(X_train, y_train, sample_weights=sample_weights, binary=True)
-#test_model(xgbModel, X_test, y_test, binary=True)
-#test_model(lrModel, X_test, y_test, binary=True)
-test_model(rfModel, X_test, y_test, binary=True, threshold=0.45)
-test_model(rfModel, X_test, y_test, binary=True, threshold=0.4)
-test_model(rfModel, X_test, y_test, binary=True, threshold=0.35)
-test_model(rfModel, X_test, y_test, binary=True, threshold=0.3)
-test_model(rfModel, X_test, y_test, binary=True, threshold=0.25)
+random_forest = train_random_forest_model(X_train, y_train, sample_weights=sample_weights, binary=True)
+logistic_r = train_logistic_regression_model(X_train, y_train, sample_weights=sample_weights, binary=True)
+xgboost_model = train_xgboost_model(X_train, y_train, sample_weights=sample_weights, binary=True)
+
+test_model(random_forest, X_test, y_test, binary=True)
+test_model(logistic_r, X_test, y_test, binary=True)
+test_model(xgboost_model, X_test, y_test, binary=True)
+
