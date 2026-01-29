@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.utils import compute_sample_weight
 import xgboost as xgb
 
-dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs.csv')
+dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs_v3.csv')
 
 test_size = 0.33
 seed = 40
@@ -16,8 +16,12 @@ seed = 40
 src_prob_cols = ['src_prob_class_0', 'src_prob_class_1', 'src_prob_class_2', 'src_prob_class_3', 'src_prob_class_4']
 rec_prob_cols = ['rec_prob_class_0', 'rec_prob_class_1', 'rec_prob_class_2', 'rec_prob_class_3', 'rec_prob_class_4']
 
-y_src = dataset[src_prob_cols].values.argmax(axis=1)
-y_rec = dataset[rec_prob_cols].values.argmax(axis=1)
+src_probs = dataset[src_prob_cols].values
+rec_probs = dataset[rec_prob_cols].values
+
+# Use argmax to select class with highest probability (no arbitrary threshold)
+y_src = src_probs.argmax(axis=1)
+y_rec = rec_probs.argmax(axis=1)
 y = np.column_stack([y_src, y_rec])
 
 drop_cols = ['label', 'source_index', 'src_from_address', 'recipient', 'src_blockchain', 'dst_blockchain'] + src_prob_cols + rec_prob_cols

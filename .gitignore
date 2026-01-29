@@ -1,6 +1,17 @@
 data/datasets/cross_chain_unified.parquet
+data/datasets/cross_chain_unified_2.parquet
+data/datasets/cross_chain_unified_3.parquet
 data/datasets/labeled_cross_chain_transactions.csv
+data/datasets/labeled_cross_chain_transactions_2.csv
+data/datasets/labeled_cross_chain_transactions_3.csv
 data/datasets/sdn_advanced.xml
+data/datasets/good_addresses.csv
+data/datasets/tornado_cash_interacted_addresses_eth.csv
+
+features/datasets/*.csv
+
+machineLearning/models/*.joblib
+machineLearning/models/*.json
 
 **/__pycache__/
 *.pyc

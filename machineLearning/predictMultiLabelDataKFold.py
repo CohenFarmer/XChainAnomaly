@@ -5,6 +5,7 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.utils import compute_sample_weight
+from sklearn.preprocessing import LabelEncoder
 import xgboost as xgb
 
 dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs.csv')
@@ -17,7 +18,21 @@ rec_prob_cols = ['rec_prob_class_0', 'rec_prob_class_1', 'rec_prob_class_2', 're
 
 y_src = dataset[src_prob_cols].values.argmax(axis=1)
 y_rec = dataset[rec_prob_cols].values.argmax(axis=1)
-y = np.column_stack([y_src, y_rec])
+
+# Remap labels to consecutive integers for XGBoost compatibility
+# Original: 0=Non-malicious, 1=Phishing, 2=Exploit, 3=Sanctioned, 4=Tornado
+# Store original labels for reporting
+src_label_encoder = LabelEncoder()
+rec_label_encoder = LabelEncoder()
+y_src_encoded = src_label_encoder.fit_transform(y_src)
+y_rec_encoded = rec_label_encoder.fit_transform(y_rec)
+
+print(f"Source label mapping: {dict(zip(src_label_encoder.classes_, range(len(src_label_encoder.classes_))))}")
+print(f"Recipient label mapping: {dict(zip(rec_label_encoder.classes_, range(len(rec_label_encoder.classes_))))}")
+
+y = np.column_stack([y_src_encoded, y_rec_encoded])
+# Keep original labels for reporting
+y_original = np.column_stack([y_src, y_rec])
 
 drop_cols = ['label', 'source_index', 'src_from_address', 'recipient', 'src_blockchain', 'dst_blockchain'] + src_prob_cols + rec_prob_cols
 X = dataset.drop(columns=drop_cols)
@@ -151,9 +166,9 @@ if __name__ == "__main__":
     print("Running K-Fold Cross-Validation")
     print("="*60)
     
-    results['Random Forest'] = run_kfold_evaluation(
-        X, y, "Random Forest", train_multi_output_random_forest
-    )
+    # results['Random Forest'] = run_kfold_evaluation(
+    #     X, y, "Random Forest", train_multi_output_random_forest
+    # )
     
     results['XGBoost'] = run_kfold_evaluation(
         X, y, "XGBoost", train_multi_output_xgboost

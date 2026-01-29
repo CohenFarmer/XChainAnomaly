@@ -32,14 +32,17 @@ df['source_index'] = pd.to_numeric(df['source_index'], errors='coerce').astype('
 df_src = df[df['role'] == 'src_from']
 df_recipient = df[df['role'] == 'recipient']
 
-df_src_missing_index = set(range(0, 51699)) - set(df_src['source_index'].drop_duplicates().tolist())
-print(df_src_missing_index)
-df_recipient_missing_index = set(range(0, 51699)) - set(df_recipient['source_index'].drop_duplicates().tolist())
-print(df_recipient_missing_index)
+# Updated to use new balanced dataset with 2600 malicious + 50k non-malicious
+final_df = pd.read_csv('features/datasets/cross_chain_labeled_transactions_balanced_50k_v3.csv')
+max_index = len(final_df)
+
+df_src_missing_index = set(range(0, max_index)) - set(df_src['source_index'].drop_duplicates().tolist())
+print(f"Missing src_from indices: {len(df_src_missing_index)}")
+df_recipient_missing_index = set(range(0, max_index)) - set(df_recipient['source_index'].drop_duplicates().tolist())
+print(f"Missing recipient indices: {len(df_recipient_missing_index)}")
 supported_chains = ['ethereum', 'arbitrum', 'optimism', 'polygon']
 
 colls = ['source_index', 'role', 'address', 'transfers_from_count', 'transfers_to_count', 'total_transfers', 'total_value', 'avg_value', 'earliest_timestamp', 'latest_timestamp', 'avg_time_between_transactions', 'min_tx_val', 'max_tx_val', 'count_tx_over_1_eth', 'count_tx_over_10_eth', 'unique_from_addresses', 'unique_to_addresses', 'time_active', 'avg_tx_freq', 'label']
-final_df = pd.read_csv('features/datasets/cross_chain_labeled_transactions_balanced_50k.csv')
 
 def collect_transfer_data(transfer, total_value, count_tx_over_1_eth, count_tx_over_10_eth, min_tx_val, max_tx_val, earliest_timestamp, latest_timestamp):
     raw_ts = transfer['metadata']['blockTimestamp'] if 'metadata' in transfer and 'blockTimestamp' in transfer['metadata'] else None

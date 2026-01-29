@@ -3,6 +3,7 @@ from enum import Enum
 class Bridge(Enum):
     STARGATE = "stargate"
     ACROSS = "across"
+    CCIO = "ccio"
 
 baseColumns = ["id", "src_blockchain", "src_transaction_hash", 
            "src_from_address", "src_to_address", "src_fee",

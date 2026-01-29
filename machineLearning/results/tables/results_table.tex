@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+\centering
+\caption{Cross-chain Transaction Classification Results (5-Fold CV)}
+\label{tab:results}
+\begin{tabular}{lccccccc}
+\toprule
+& \multicolumn{3}{c}{Source Address} & \multicolumn{3}{c}{Recipient Address} & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Model & Acc. & Prec. & F1 & Acc. & Prec. & F1 & Exact Match \\
+\midrule
+Majority Baseline & 0.887 & - & - & 0.839 & - & - & - \\
+\midrule
+Random Forest & 0.822 $\pm$ 0.005 & 0.273 & 0.259 & 0.793 $\pm$ 0.005 & 0.376 & 0.384 & 0.667 \\
+Logistic Regression & 0.712 $\pm$ 0.014 & 0.182 & 0.173 & 0.047 $\pm$ 0.003 & 0.014 & 0.026 & 0.030 \\
+XGBoost & 0.830 $\pm$ 0.004 & 0.262 & 0.264 & 0.788 $\pm$ 0.004 & 0.386 & 0.384 & 0.675 \\
+\bottomrule
+\end{tabular}
+\end{table}

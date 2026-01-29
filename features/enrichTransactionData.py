@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import joblib
 
-cctx_tx_data = pd.read_csv('features/datasets/cross_chain_labeled_transactions_balanced_50k.csv')
+cctx_tx_data = pd.read_csv('features/datasets/cross_chain_labeled_transactions_balanced_50k_v3.csv')
 
 cctx_tx_data = cctx_tx_data.reset_index(drop=True)
 cctx_tx_data['source_index'] = np.arange(len(cctx_tx_data))
@@ -61,7 +61,7 @@ enriched = (
 		.merge(rec_probs, on='source_index', how='left')
 )
 
-out_path = 'features/datasets/cross_chain_labeled_transactions_enriched_probs_rf.csv'
+out_path = 'features/datasets/cross_chain_labeled_transactions_enriched_probs_v3.csv'
 prob_cols = [c for c in enriched.columns if c.startswith('src_prob_class_') or c.startswith('rec_prob_class_')]
 before_ct = len(enriched)
 if prob_cols:

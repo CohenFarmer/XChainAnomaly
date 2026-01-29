@@ -1,7 +1,7 @@
 import pandas as pd
 from config.constants import baseColumns
 from data.dataExtraction.dataCleaning import clean_numeric_columns
-from data.dataExtraction.renameColumns import rename_stargate_columns, bridgeRenameColumns
+from data.dataExtraction.renameColumns import rename_stargate_columns, rename_ccio_columns, bridgeRenameColumns
 from dotenv import load_dotenv
 import os
 
@@ -14,8 +14,12 @@ class dataConcat(object):
         dataframes = []
         for bridge in self.bridges:
             df = pd.read_csv(f"{self.CSV_PATHS}{bridge}.csv")
-            if (bridgeRenameColumns[bridge]):
+            # Apply bridge-specific column renaming
+            if bridge == 'stargate':
                 df = rename_stargate_columns(df)
+            elif bridge == 'ccio':
+                df = rename_ccio_columns(df)
+            # No renaming needed for 'across' (bridgeRenameColumns['across'] = 0)
             df['bridge_name'] = bridge
             df = df[baseColumns]
             dataframes.append(df)
@@ -30,6 +34,6 @@ class dataConcat(object):
 
 #can only combine bridges that have csv files of their data, also very important that
 #the columns names are renamed to match base columns
-combineData = dataConcat(bridges=['across'])
+combineData = dataConcat(bridges=['across', 'stargate', 'ccio'])
 df = combineData.combine_bridge_datasets()
-df.to_parquet("data/datasets/cross_chain_unified.parquet", engine='pyarrow', index=False)
+df.to_parquet("data/datasets/cross_chain_unified_3.parquet", engine='pyarrow', index=False)
