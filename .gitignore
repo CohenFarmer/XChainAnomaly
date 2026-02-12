@@ -9,7 +9,7 @@ data/datasets/good_addresses.csv
 data/datasets/tornado_cash_interacted_addresses_eth.csv
 
 
-machineLearning/models/*.joblib
+
 machineLearning/models/*.json
 
 **/__pycache__/
