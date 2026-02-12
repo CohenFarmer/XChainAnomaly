@@ -8,7 +8,6 @@ data/datasets/sdn_advanced.xml
 data/datasets/good_addresses.csv
 data/datasets/tornado_cash_interacted_addresses_eth.csv
 
-features/datasets/*.csv
 
 machineLearning/models/*.joblib
 machineLearning/models/*.json
