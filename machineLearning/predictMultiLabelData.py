@@ -1,3 +1,4 @@
+#trains multi output classifiers for source and recipient address prediction
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -19,7 +20,7 @@ rec_prob_cols = ['rec_prob_class_0', 'rec_prob_class_1', 'rec_prob_class_2', 're
 src_probs = dataset[src_prob_cols].values
 rec_probs = dataset[rec_prob_cols].values
 
-# Use argmax to select class with highest probability (no arbitrary threshold)
+#extracts target labels from probability maxes
 y_src = src_probs.argmax(axis=1)
 y_rec = rec_probs.argmax(axis=1)
 y = np.column_stack([y_src, y_rec])
@@ -31,14 +32,14 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=test_size, random_state=seed, stratify=y_src
 )
 
-
+#computes balanced sample weights for multi output
 def compute_xgb_sample_weights(y_train):
     weights_src = compute_sample_weight('balanced', y_train[:, 0])
     weights_rec = compute_sample_weight('balanced', y_train[:, 1])
     combined_weights = np.sqrt(weights_src * weights_rec)
     return combined_weights
 
-
+#trains random forest multi output classifier
 def train_multi_output_random_forest(X_train, y_train):
     base_rf = RandomForestClassifier(
         n_estimators=200, 
@@ -52,7 +53,7 @@ def train_multi_output_random_forest(X_train, y_train):
     model.fit(X_train, y_train)
     return model
 
-
+#trains logistic regression multi output classifier
 def train_multi_output_logistic_regression(X_train, y_train):
     base_lr = LogisticRegression(
         max_iter=2000, 
@@ -65,7 +66,7 @@ def train_multi_output_logistic_regression(X_train, y_train):
     model.fit(X_train, y_train)
     return model
 
-
+#trains xgboost multi output classifier
 def train_multi_output_xgboost(X_train, y_train):
     sample_weights = compute_xgb_sample_weights(y_train)
     
@@ -83,7 +84,7 @@ def train_multi_output_xgboost(X_train, y_train):
     model.fit(X_train, y_train, sample_weight=sample_weights)
     return model
 
-
+#evaluates multi output model and prints metrics
 def test_multi_output_model(model, X_test, y_test, model_name="Model"):
     y_pred = model.predict(X_test)
     

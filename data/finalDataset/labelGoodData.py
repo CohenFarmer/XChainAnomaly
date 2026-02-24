@@ -1,12 +1,15 @@
+#creates dataset of non malicious addresses from cross chain transactions
 import pandas as pd
 import numpy as np
 
+#strips and lowercases address
 def normalize_address(address: str) -> str:
         address = address.strip().lower()
         if address.startswith("0x"):
             address = address[2:]
         return address
 
+#binary search for address in sorted malicious list
 def search_by_sorted_address(target: str, malicious_data: np.ndarray) -> bool:
     key = normalize_address(target)
     idx = np.searchsorted(malicious_data, key)
@@ -21,6 +24,7 @@ malicious_data = malicious_addresses['address'].astype(str).map(normalize_addres
 
 final_df= pd.DataFrame(columns=['address', 'blockchain', 'label'], dtype=object)
 
+#collects addresses not in malicious list
 for index, row in transactions.head(250000).iterrows():
     depositor = normalize_address(row['depositor'])
     recipient = normalize_address(row['recipient'])

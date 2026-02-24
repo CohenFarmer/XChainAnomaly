@@ -1,3 +1,4 @@
+#extracts sanctioned crypto addresses from ofac xml file
 import xml.etree.ElementTree as ET
 import pathlib
 import json
@@ -11,10 +12,11 @@ POSSIBLE_ASSETS = ["XBT", "ETH", "XMR", "LTC", "ZEC", "DASH", "BTG", "ETC",
 
 OUTPUT_FORMATS = ["TXT", "JSON"]
 
+#builds feature type string for asset
 def feature_type_text(asset):
     return "Digital Currency Address - " + asset
 
-
+#finds xml id for asset address type
 def get_address_id(root, asset):
     feature_type = root.find(
         "sdn:ReferenceValueSets/sdn:FeatureTypeValues/*[.='{}']".format(feature_type_text(asset)), NAMESPACE)
@@ -24,34 +26,33 @@ def get_address_id(root, asset):
     address_id = feature_type.attrib["ID"]
     return address_id
 
-
+#extracts all addresses for given address id from xml
 def get_sanctioned_addresses(root, address_id):
-    """returns a list of sanctioned addresses for the given address_id"""
     addresses = list()
     for feature in root.findall("sdn:DistinctParties//*[@FeatureTypeID='{}']".format(address_id), NAMESPACE):
         for version_detail in feature.findall(".//sdn:VersionDetail", NAMESPACE):
             addresses.append(version_detail.text)
     return addresses
 
-
+#writes addresses to file in specified formats
 def write_addresses(addresses, asset, output_formats, outpath):
     if "TXT" in output_formats:
         write_addresses_txt(addresses, asset, outpath)
     if "JSON" in output_formats:
         write_addresses_json(addresses, asset, outpath)
 
-
+#writes addresses to text file
 def write_addresses_txt(addresses, asset, outpath):
     with open("{}/sanctioned_addresses_{}.txt".format(outpath, asset), 'w') as out:
         for address in addresses:
             out.write(address+"\n")
 
-
+#writes addresses to json file
 def write_addresses_json(addresses, asset, outpath):
     with open("{}/sanctioned_addresses_{}.json".format(outpath, asset), 'w') as out:
         out.write(json.dumps(addresses, indent=2)+"\n")
 
-
+#main function to parse xml and extract addresses
 def run(assets=None, sdn_path="data/datasets/sdn_advanced.xml", output_formats=None, outpath=pathlib.Path("./")):
 
     if assets is None:

@@ -1,3 +1,4 @@
+#trains binary transaction classification models
 import numpy as np
 import xgboost as xgb
 import pandas as pd
@@ -9,15 +10,13 @@ from xgboost.callback import EarlyStopping
 from sklearn.metrics import make_scorer, f1_score
 from machineLearning.supervisedModels import train_xgboost_model, test_model, train_logistic_regression_model, train_random_forest_model
 
-# Load labeled transaction data
 dataset = pd.read_csv('data/datasets/labeled_cross_chain_transactions_3.csv', low_memory=False)
 
-# Balance the dataset: all malicious (label > 0) + 50k non-malicious (label 0)
+#balances dataset with malicious and non malicious samples
 malicious = dataset[dataset['label'] > 0]
 non_malicious = dataset[dataset['label'] == 0].sample(n=50000, random_state=40)
 dataset = pd.concat([malicious, non_malicious], ignore_index=True).sample(frac=1.0, random_state=40)
 
-# Convert labels to binary: 0 = non-malicious, 1 = malicious
 dataset['label'] = (dataset['label'] > 0).astype(int)
 
 print(f"Dataset size: {len(dataset)}")

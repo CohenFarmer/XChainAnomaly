@@ -1,3 +1,4 @@
+#performs k fold cross validation for multi output classification
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -19,9 +20,7 @@ rec_prob_cols = ['rec_prob_class_0', 'rec_prob_class_1', 'rec_prob_class_2', 're
 y_src = dataset[src_prob_cols].values.argmax(axis=1)
 y_rec = dataset[rec_prob_cols].values.argmax(axis=1)
 
-# Remap labels to consecutive integers for XGBoost compatibility
-# Original: 0=Non-malicious, 1=Phishing, 2=Exploit, 3=Sanctioned, 4=Tornado
-# Store original labels for reporting
+
 src_label_encoder = LabelEncoder()
 rec_label_encoder = LabelEncoder()
 y_src_encoded = src_label_encoder.fit_transform(y_src)
@@ -31,20 +30,20 @@ print(f"Source label mapping: {dict(zip(src_label_encoder.classes_, range(len(sr
 print(f"Recipient label mapping: {dict(zip(rec_label_encoder.classes_, range(len(rec_label_encoder.classes_))))}")
 
 y = np.column_stack([y_src_encoded, y_rec_encoded])
-# Keep original labels for reporting
+#Keep original labels for reporting
 y_original = np.column_stack([y_src, y_rec])
 
 drop_cols = ['label', 'source_index', 'src_from_address', 'recipient', 'src_blockchain', 'dst_blockchain'] + src_prob_cols + rec_prob_cols
 X = dataset.drop(columns=drop_cols)
 
-
+#computes balanced sample weights for multi output targets
 def compute_xgb_sample_weights(y_train):
     weights_src = compute_sample_weight('balanced', y_train[:, 0])
     weights_rec = compute_sample_weight('balanced', y_train[:, 1])
     combined_weights = np.sqrt(weights_src * weights_rec)
     return combined_weights
 
-
+#trains random forest with balanced class weights
 def train_multi_output_random_forest(X_train, y_train):
     base_rf = RandomForestClassifier(
         n_estimators=200, 
@@ -58,7 +57,7 @@ def train_multi_output_random_forest(X_train, y_train):
     model.fit(X_train, y_train)
     return model
 
-
+#trains xgboost multi output classifier
 def train_multi_output_xgboost(X_train, y_train):
     sample_weights = compute_xgb_sample_weights(y_train)
     
@@ -76,14 +75,14 @@ def train_multi_output_xgboost(X_train, y_train):
     model.fit(X_train, y_train, sample_weight=sample_weights)
     return model
 
-
+#calculates accuracy metrics for a single fold
 def evaluate_fold(y_true, y_pred):
     src_acc = accuracy_score(y_true[:, 0], y_pred[:, 0])
     rec_acc = accuracy_score(y_true[:, 1], y_pred[:, 1])
     exact_match = np.mean(np.all(y_pred == y_true, axis=1))
     return src_acc, rec_acc, exact_match
 
-
+#runs stratified k fold cross validation and prints results
 def run_kfold_evaluation(X, y, model_name, train_func):
     print(f"\n{'='*60}")
     print(f"{model_name} - {n_folds}-Fold Cross-Validation")

@@ -1,3 +1,4 @@
+#finds cross chain transactions that interact with tornado cash
 import pandas as pd
 import pyarrow.parquet as pq
 import pyarrow as pa
@@ -11,6 +12,7 @@ print(df.columns)
 all_tornado_interactions = set()
 all_one_hop_tornado_interactions = set()
 
+#checks each transaction for tornado cash connections
 for index, row in df.iterrows():
     if row['src_blockchain'].lower() == 'ethereum':
         if row['depositor'].lower() in tornado_df['tornado_interacted_address'].values:

@@ -1,10 +1,13 @@
+#constants for cross chain transaction data
 from enum import Enum
 
+#supported bridge protocols
 class Bridge(Enum):
     STARGATE = "stargate"
     ACROSS = "across"
     CCIO = "ccio"
 
+#standard column names for unified dataset
 baseColumns = ["id", "src_blockchain", "src_transaction_hash", 
            "src_from_address", "src_to_address", "src_fee",
            "src_fee_usd", "src_timestamp", "src_contract_address", "dst_blockchain",

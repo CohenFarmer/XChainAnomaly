@@ -1,3 +1,4 @@
+#extracts on chain features for addresses in cross chain transactions
 import pandas as pd
 from data.dataExtraction.alchemyGetAddressTransfers import getAddressTransfers
 from datetime import datetime, timezone
@@ -10,21 +11,6 @@ from threading import Lock
 feature_cache = {}
 cache_lock = Lock()
 
-"""good_df = pd.read_csv('data/datasets/good_addresses.csv')
-malicious_df = pd.read_csv('data/datasets/malicious_address_tornado_5000.csv')
-malicious_df['blockchain'] = "ethereum"
-
-cols = ['address', 'blockchain', 'label']
-
-supported_chains = ['ethereum', 'arbitrum', 'optimism', 'polygon']
-
-malicious_df = malicious_df.sample(frac=1, random_state=42).reset_index(drop=True)
-
-malicious_df = malicious_df[cols]
-malicious_df = malicious_df.head(2000)
-
-good_df = good_df.sample(frac=1, random_state=42).reset_index(drop=True)
-good_df = good_df.head(30000)"""
 df = pd.read_csv('features/datasets/cctx_transfer_features.csv')
 
 df['source_index'] = pd.to_numeric(df['source_index'], errors='coerce').astype('Int64')
@@ -32,10 +18,11 @@ df['source_index'] = pd.to_numeric(df['source_index'], errors='coerce').astype('
 df_src = df[df['role'] == 'src_from']
 df_recipient = df[df['role'] == 'recipient']
 
-# Updated to use new balanced dataset with 2600 malicious + 50k non-malicious
+
 final_df = pd.read_csv('features/datasets/cross_chain_labeled_transactions_balanced_50k_v3.csv')
 max_index = len(final_df)
 
+#finds missing indices for src and recipient
 df_src_missing_index = set(range(0, max_index)) - set(df_src['source_index'].drop_duplicates().tolist())
 print(f"Missing src_from indices: {len(df_src_missing_index)}")
 df_recipient_missing_index = set(range(0, max_index)) - set(df_recipient['source_index'].drop_duplicates().tolist())
@@ -44,6 +31,7 @@ supported_chains = ['ethereum', 'arbitrum', 'optimism', 'polygon']
 
 colls = ['source_index', 'role', 'address', 'transfers_from_count', 'transfers_to_count', 'total_transfers', 'total_value', 'avg_value', 'earliest_timestamp', 'latest_timestamp', 'avg_time_between_transactions', 'min_tx_val', 'max_tx_val', 'count_tx_over_1_eth', 'count_tx_over_10_eth', 'unique_from_addresses', 'unique_to_addresses', 'time_active', 'avg_tx_freq', 'label']
 
+#accumulates transfer stats from a single transfer
 def collect_transfer_data(transfer, total_value, count_tx_over_1_eth, count_tx_over_10_eth, min_tx_val, max_tx_val, earliest_timestamp, latest_timestamp):
     raw_ts = transfer['metadata']['blockTimestamp'] if 'metadata' in transfer and 'blockTimestamp' in transfer['metadata'] else None
     if raw_ts:
@@ -65,6 +53,7 @@ def collect_transfer_data(transfer, total_value, count_tx_over_1_eth, count_tx_o
             max_tx_val = value
     return total_value, count_tx_over_1_eth, count_tx_over_10_eth, min_tx_val, max_tx_val, earliest_timestamp, latest_timestamp
 
+#fetches all transfers and computes features for an address
 def compute_address_features(address: str, label: int, chain: str, source_index: int, role: str):
     key = (str(address).lower(), str(chain).lower())
     with cache_lock:
@@ -155,6 +144,7 @@ def compute_address_features(address: str, label: int, chain: str, source_index:
     
 
 if __name__ == "__main__":
+    #builds work list of addresses to fetch
     work_list = []
     for idx, r in final_df.iterrows():
         if idx in df_src_missing_index:
@@ -174,6 +164,7 @@ if __name__ == "__main__":
     first_write = True
     retry_counts = {}
 
+    #processes addresses in parallel with retries
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         pending = {}
         for address, label, idx, chain, role in work_list:
@@ -227,6 +218,7 @@ if __name__ == "__main__":
                 else:
                     print(f'Skipping {address} after {max_retries} timeouts')
 
+    #saves remaining buffer
     if buffer:
         df_chunk = pd.DataFrame(buffer, columns=colls)
         df_chunk.to_csv(output_path, mode='a', header=first_write, index=False)

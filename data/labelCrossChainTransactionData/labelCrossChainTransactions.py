@@ -1,12 +1,8 @@
+#labels cross chain transactions based on malicious address involvement
 import pandas as pd
 import data.anomalousDataCollection.tornadoCashInteraction as tornadoCashInteraction
 
-# Label meanings:
-# 0 = Non-malicious (clean)
-# 1 = Phishing
-# 2 = Exploit/Heist
-# 3 = Sanctioned
-# 4 = Tornado Cash interacted
+#label meanings: 0=clean 1=phishing 2=exploit 3=sanctioned 4=tornado
 
 df = pd.read_parquet('data/datasets/cross_chain_unified.parquet', engine='pyarrow')
 blockchains = set(['ethereum', 'polygon', 'arbitrum', 'optimism'])
@@ -21,32 +17,31 @@ recip_col = 'recipient' if 'recipient' in df_with_only_supported_chains.columns 
 src_lower = df_with_only_supported_chains[src_col].fillna('').str.lower()
 recip_lower = df_with_only_supported_chains[recip_col].fillna('').str.lower()
 
-# Load malicious addresses with their labels
+#loads malicious addresses with labels
 malicious_df = pd.read_csv('data/datasets/malicious_address_all.csv')
 address_to_label = dict(zip(
     malicious_df['address'].astype(str).str.lower(),
     malicious_df['label']
 ))
 
-# Also include tornado addresses that may not be in malicious_address_all.csv
+#adds tornado addresses not in main list
 tornado_df = pd.read_csv('data/datasets/tornado_cash_interacted_addresses_eth.csv')
 for addr in tornado_df['tornado_interacted_address'].astype(str).str.lower():
     if addr not in address_to_label:
-        address_to_label[addr] = 4  # Label as Tornado Cash
+        address_to_label[addr] = 4
 
-# Assign labels: check src_from_address first, then recipient
-# If both are malicious, use the src_from_address label
+#returns label for transaction based on src and recipient
 def get_label(src, recip):
     if src in address_to_label:
         return address_to_label[src]
     if recip in address_to_label:
         return address_to_label[recip]
-    return 0  # Non-malicious
+    return 0
 
 labels = [get_label(s, r) for s, r in zip(src_lower, recip_lower)]
 df_with_only_supported_chains['label'] = labels
 
-# Count by label
+#prints label distribution
 label_counts = df_with_only_supported_chains['label'].value_counts().sort_index()
 print("\nLabel distribution:")
 print("0 (Non-malicious):", label_counts.get(0, 0))

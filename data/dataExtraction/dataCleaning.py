@@ -1,6 +1,7 @@
+#data cleaning utility functions
 import pandas as pd
-#this file is needed for any data cleaning functions
 
+#converts columns to numeric and drops na values
 def clean_numeric_columns(df, numeric_cols):
     df.dropna()
     for col in numeric_cols:

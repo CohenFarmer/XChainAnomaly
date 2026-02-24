@@ -1,6 +1,7 @@
+#time utility functions
 from datetime import datetime, timezone
 
-
+#converts timestamp string to start of day in iso format
 def normalize_to_day_start_iso(ts_str: str) -> str:
     if not ts_str:
         return ts_str

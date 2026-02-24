@@ -1,4 +1,4 @@
-
+#generates evaluation metrics and figures for all three models
 
 import numpy as np
 import pandas as pd
@@ -31,7 +31,7 @@ TEST_SIZE = 0.33
 ADDRESS_CLASS_NAMES = ['Non-Malicious', 'Phishing', 'Exploit', 'Sanctioned', 'Tornado']
 TRANSACTION_CLASS_NAMES = ['Non-Malicious', 'Malicious']
 
-
+#creates output directories for a model
 def create_model_dirs(model_name):
     model_dir = f'{RESULTS_DIR}/{model_name}'
     figures_dir = f'{model_dir}/figures'
@@ -41,7 +41,7 @@ def create_model_dirs(model_name):
     os.makedirs(tables_dir, exist_ok=True)
     return model_dir, figures_dir, tables_dir
 
-
+#computes precision recall f1 and auc for each class
 def get_per_class_metrics(y_true, y_pred, class_names, y_proba=None):
     report = classification_report(y_true, y_pred, target_names=class_names, 
                                    output_dict=True, zero_division=0)
@@ -90,7 +90,7 @@ def get_per_class_metrics(y_true, y_pred, class_names, y_proba=None):
     
     return per_class
 
-
+#prints formatted per class metrics table
 def print_per_class_results(per_class, class_names, title=""):
     if title:
         print(f"\n{title}")
@@ -108,7 +108,7 @@ def print_per_class_results(per_class, class_names, title=""):
     m = per_class['weighted_avg']
     print(f"{'Weighted Avg':<20} {m['precision']*100:>10.2f}% {m['recall']*100:>10.2f}% {m['f1']*100:>10.2f}%")
 
-
+#saves per class metrics to csv file
 def save_per_class_csv(per_class, class_names, filepath):
     rows = []
     for name in class_names:
@@ -126,7 +126,7 @@ def save_per_class_csv(per_class, class_names, filepath):
     rows.append({'class': 'weighted_avg', **per_class['weighted_avg']})
     pd.DataFrame(rows).to_csv(filepath, index=False)
 
-
+#generates and saves normalized confusion matrix heatmap
 def plot_confusion_matrix(y_true, y_pred, class_names, title, filepath):
     cm = confusion_matrix(y_true, y_pred)
     cm_norm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -143,13 +143,14 @@ def plot_confusion_matrix(y_true, y_pred, class_names, title, filepath):
     plt.savefig(f'{filepath}.pdf', bbox_inches='tight')
     plt.close()
 
+#loads address classification dataset
 def load_address_dataset():
     dataset = pd.read_csv('features/datasets/address_transfer_features_eth_3.csv')
     X = dataset.drop(columns=['label', 'address'])
     y = dataset['label'].values
     return X, y
 
-
+#returns address model training functions
 def get_address_models():
     def train_rf(X_train, y_train, sample_weights=None):
         model = RandomForestClassifier(
@@ -183,7 +184,7 @@ def get_address_models():
     
     return {'RandomForest': train_rf, 'LogisticRegression': train_lr, 'XGBoost': train_xgb}
 
-
+#runs k fold evaluation for address classification model
 def run_model1_address_classification():
     print("\n" + "=" * 80)
     print("MODEL 1: ADDRESS CLASSIFICATION (Multi-class, 5 classes)")
@@ -269,8 +270,8 @@ def run_model1_address_classification():
     print(f"\nResults saved to {model_dir}/")
     return output
 
+#loads transaction dataset with downsampled non malicious
 def load_transaction_dataset():
-    """Load transaction dataset"""
     dataset = pd.read_csv('data/datasets/labeled_cross_chain_transactions_3.csv', low_memory=False)
     
     malicious = dataset[dataset['label'] > 0]
@@ -286,7 +287,7 @@ def load_transaction_dataset():
     
     return X, y
 
-
+#returns transaction model training functions
 def get_transaction_models():
     def train_rf(X_train, y_train, sample_weights=None):
         model = RandomForestClassifier(
@@ -319,7 +320,7 @@ def get_transaction_models():
     
     return {'RandomForest': train_rf, 'LogisticRegression': train_lr, 'XGBoost': train_xgb}
 
-
+#runs k fold evaluation for binary transaction classification
 def run_model2_transaction_classification():
     print("\n" + "=" * 80)
     print("MODEL 2: TRANSACTION CLASSIFICATION (Binary)")
@@ -409,8 +410,7 @@ def run_model2_transaction_classification():
     print(f"\nResults saved to {model_dir}/")
     return output
 
-
-
+#loads hybrid dataset with address probability features
 def load_hybrid_dataset():
     dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs_v3.csv')
     
@@ -429,7 +429,7 @@ def load_hybrid_dataset():
     
     return X, y
 
-
+#returns multi output model training functions
 def get_hybrid_models():
     def train_rf(X_train, y_train):
         base_rf = RandomForestClassifier(
@@ -465,7 +465,7 @@ def get_hybrid_models():
     
     return {'RandomForest': train_rf, 'LogisticRegression': train_lr, 'XGBoost': train_xgb}
 
-
+#runs k fold evaluation for multi output hybrid model
 def run_model3_hybrid_classification():
     print("\n" + "=" * 80)
     print("MODEL 3: HYBRID MULTI-OUTPUT CLASSIFICATION")
@@ -578,7 +578,7 @@ def run_model3_hybrid_classification():
     print(f"\nResults saved to {model_dir}/")
     return output
 
-
+#runs all three model evaluations and saves combined results
 def main():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     print(f"\n{'='*80}")

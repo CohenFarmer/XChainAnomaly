@@ -1,4 +1,4 @@
-
+#provides shap and llm based explanations for transaction predictions
 
 import shap
 import numpy as np
@@ -9,10 +9,10 @@ import json
 
 CLASS_NAMES = ['Non-Malicious', 'Phishing', 'Exploit', 'Sanctioned', 'Tornado']
 
-
+#generates shap explanations for multi output model predictions
 class TransactionExplainer:
 
-    
+    #initializes shap explainers for source and recipient models
     def __init__(self, multi_output_model, feature_names: List[str]):
 
         self.model = multi_output_model
@@ -20,6 +20,7 @@ class TransactionExplainer:
         self.src_explainer = shap.TreeExplainer(multi_output_model.estimators_[0])
         self.rec_explainer = shap.TreeExplainer(multi_output_model.estimators_[1])
     
+    #computes shap values and returns feature contributions for both outputs
     def get_shap_explanation(self, X_instance) -> Dict[str, Any]:
 
         X = X_instance.values.reshape(1, -1) if hasattr(X_instance, 'values') else np.array(X_instance).reshape(1, -1)
@@ -83,7 +84,7 @@ class TransactionExplainer:
             'feature_values': dict(zip(self.feature_names, feature_values.tolist()))
         }
 
-
+#sends shap explanations to llm for natural language output
 class LLMExplainer:
 
     
@@ -109,11 +110,13 @@ Class meanings:
 - Sanctioned: OFAC-sanctioned address
 - Tornado: Tornado Cash mixer user/depositor"""
 
+    #sets up openai client and model name
     def __init__(self, llm_client, model_name: str = "gpt-4"):
     
         self.client = llm_client
         self.model_name = model_name
     
+    #formats shap explanation into readable text for llm prompt
     def _format_features_for_prompt(self, explanation: Dict[str, Any], top_n: int = 5) -> str:
     
         features = explanation['feature_values']
@@ -146,6 +149,7 @@ Class meanings:
         
         return feature_str + src_str + rec_str
     
+    #sends formatted explanation to llm and returns response
     def explain(self, shap_explanation: Dict[str, Any], top_features: int = 5) -> str:
         
         user_prompt = f"""Analyze this cross-chain transaction and explain the model's predictions:
@@ -169,14 +173,15 @@ Provide a clear explanation of:
         
         return response.choices[0].message.content
     
+    #explains multiple transactions sequentially
     def explain_batch(self, explanations: List[Dict[str, Any]], top_features: int = 5) -> List[str]:
         
         return [self.explain(exp, top_features) for exp in explanations]
 
-
+#uses local ollama server for explanations
 class LocalLLMExplainer(LLMExplainer):
 
-    
+    #sets up connection to local ollama instance
     def __init__(self, base_url: str = "http://localhost:11434", model_name: str = "llama3"):
 
         import requests
@@ -184,6 +189,7 @@ class LocalLLMExplainer(LLMExplainer):
         self.model_name = model_name
         self._requests = requests
     
+    #sends prompt to ollama api and returns explanation
     def explain(self, shap_explanation: Dict[str, Any], top_features: int = 5) -> str:
     
         
@@ -216,7 +222,7 @@ Provide a clear explanation of:
         else:
             raise Exception(f"Ollama API error: {response.status_code} - {response.text}")
 
-
+#creates shap explainer and llm explainer based on provider choice
 def create_explainer_pipeline(multi_output_model, feature_names: List[str], 
                                llm_provider: str = "openai",
                                **llm_kwargs) -> tuple:
@@ -245,13 +251,15 @@ def create_explainer_pipeline(multi_output_model, feature_names: List[str],
     
     return tx_explainer, llm_explainer
 
-
+#uses anthropic claude for explanations
 class AnthropicExplainer(LLMExplainer):
     
+    #sets up anthropic client
     def __init__(self, client, model_name: str = "claude-3-sonnet-20240229"):
         self.client = client
         self.model_name = model_name
     
+    #sends prompt to claude and returns explanation
     def explain(self, shap_explanation: Dict[str, Any], top_features: int = 5) -> str:
         user_prompt = f"""Analyze this cross-chain transaction and explain the model's predictions:
 
@@ -273,8 +281,7 @@ Provide a clear explanation of:
         
         return response.content[0].text
 
-
-# Convenience function for quick explanations
+#convenience function to explain a single transaction
 def explain_transaction(model, X_instance, feature_names: List[str], 
                         llm_client=None, llm_provider: str = "openai") -> Dict[str, Any]:
 

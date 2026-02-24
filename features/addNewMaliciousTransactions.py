@@ -1,10 +1,4 @@
-"""
-Add new malicious transactions to the enriched dataset.
-1. Get all malicious transactions from labeled_cross_chain_transactions_3.csv
-2. Fetch on-chain features for their addresses (multi-threaded, saves progress)
-3. Predict 5-class probabilities using address model
-4. Append to existing enriched dataset
-"""
+#adds new malicious transactions to the enriched dataset
 
 import pandas as pd
 import numpy as np
@@ -17,18 +11,18 @@ from data.dataExtraction.alchemyGetAddressTransfers import getAddressTransfers
 PROGRESS_FILE = 'features/datasets/new_address_features_progress.csv'
 BATCH_SIZE = 10
 
-# Load existing enriched data
+#loads existing enriched dataset
 enriched = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs.csv')
 print(f"Existing enriched: {len(enriched)} rows")
 print(f"  Labels: {enriched['label'].value_counts().sort_index().to_dict()}")
 
-# Load new labeled data - get ALL malicious
+#loads labeled transactions and filters to malicious
 labeled = pd.read_csv('data/datasets/labeled_cross_chain_transactions_3.csv', low_memory=False)
 all_malicious = labeled[labeled['label'] > 0].copy()
 
 print(f"\nTotal malicious in labeled file: {len(all_malicious)} rows")
 
-# Deduplicate: remove transactions already in enriched based on (src_from, recipient, timestamp)
+#finds transactions not already in enriched dataset
 enriched_keys = set(zip(
     enriched['src_from_address'].str.lower(), 
     enriched['recipient'].str.lower(), 
@@ -42,21 +36,19 @@ new_malicious = all_malicious[~all_malicious.apply(
 print(f"After deduplication: {len(new_malicious)} new rows to add")
 print(f"  By bridge: {new_malicious['bridge_name'].value_counts().to_dict()}")
 
-# Convert label to binary (1 = malicious)
+
 new_malicious['label'] = 1
 
-# Unique addresses to fetch
 src_addresses = new_malicious['src_from_address'].unique()
 rec_addresses = new_malicious['recipient'].unique()
 all_addresses = list(set(src_addresses) | set(rec_addresses))
 print(f"\nUnique addresses to fetch: {len(all_addresses)}")
 
-# Load address model
 model = joblib.load('machineLearning/models/random_forest_address_transfer_model_eth_3.joblib')
 feature_names = list(model.feature_names_in_)
 print(f"Loaded model with {len(feature_names)} features")
 
-
+#accumulates transfer stats from a single transfer
 def collect_transfer_data(transfer, total_value, count_tx_over_1_eth, count_tx_over_10_eth, 
                           min_tx_val, max_tx_val, earliest_timestamp, latest_timestamp):
     raw_ts = transfer.get('metadata', {}).get('blockTimestamp')
@@ -79,9 +71,8 @@ def collect_transfer_data(transfer, total_value, count_tx_over_1_eth, count_tx_o
             max_tx_val = value
     return total_value, count_tx_over_1_eth, count_tx_over_10_eth, min_tx_val, max_tx_val, earliest_timestamp, latest_timestamp
 
-
+#fetches all transfers and computes features for an address
 def compute_address_features(address: str, chain: str = "ethereum"):
-    """Extract on-chain features for a single address"""
     try:
         client = getAddressTransfers()
         from_transfers = client.fetch_transfers(chain, "from", from_address=address)
@@ -113,7 +104,7 @@ def compute_address_features(address: str, chain: str = "ethereum"):
             )
             unique_from_addresses.add(transfer.get('from', ''))
 
-        # Convert timestamps
+        #converts timestamps to milliseconds
         if earliest_timestamp:
             earliest_timestamp = int(datetime.fromisoformat(earliest_timestamp.replace("Z", "+00:00")).timestamp() * 1000)
         else:
@@ -152,19 +143,17 @@ def compute_address_features(address: str, chain: str = "ethereum"):
         print(f"  Error fetching {address[:10]}...: {e}")
         return None
 
-
+#gets 5 class probabilities for an address using model
 def predict_proba(address, address_features, model, feature_names):
-    """Get 5-class probabilities for an address"""
     features = address_features.get(address)
     if features is None:
-        return [1.0, 0.0, 0.0, 0.0, 0.0]  # Default to non-malicious
+        return [1.0, 0.0, 0.0, 0.0, 0.0]
     
     feature_vector = [features.get(fname, 0) for fname in feature_names]
     X = np.array([feature_vector])
     return model.predict_proba(X)[0].tolist()
 
-
-# Load address features from progress file (skip fetching)
+#loads cached address features from progress file
 print("\n" + "=" * 60)
 print("Loading address features from progress file...")
 print("=" * 60)
@@ -183,14 +172,14 @@ else:
     print("ERROR: No progress file found!")
     exit(1)
 
-# Check how many addresses we're missing
+#checks how many addresses are missing
 missing = [a for a in all_addresses if a not in address_features]
 print(f"Missing addresses (will use default probs): {len(missing)}")
 
 success = sum(1 for v in address_features.values() if v is not None)
 print(f"Successfully loaded features for {success}/{len(all_addresses)} addresses")
 
-# Build enriched rows
+#builds enriched rows with probabilities
 print("\n" + "=" * 60)
 print("Predicting probabilities and building rows...")
 print("=" * 60)
@@ -235,7 +224,7 @@ for i, (idx, row) in enumerate(new_malicious.iterrows()):
 new_enriched = pd.DataFrame(enriched_rows)
 print(f"Built {len(new_enriched)} new rows")
 
-# Combine and save
+#combines with existing and saves
 combined = pd.concat([enriched, new_enriched], ignore_index=True)
 print(f"\nCombined: {len(combined)} rows")
 print(f"  Labels: {combined['label'].value_counts().sort_index().to_dict()}")

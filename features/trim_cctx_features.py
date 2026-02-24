@@ -1,9 +1,10 @@
+#trims feature dataset to only include rows up to source index 25000
 import pandas as pd
 from pathlib import Path
 
 CSV_PATH = Path('features/datasets/cctx_transfer_features.csv')
 
-
+#reads csv and filters by source index
 def main():
     if not CSV_PATH.exists():
         raise FileNotFoundError(f"CSV not found: {CSV_PATH}")

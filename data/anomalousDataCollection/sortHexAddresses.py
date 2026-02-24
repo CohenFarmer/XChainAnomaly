@@ -1,5 +1,7 @@
+#sorts addresses in csv file alphabetically
 import pandas as pd
 
+#reads csv and sorts addresses in lowercase
 def sort_hex_addresses(csv_path):
     df = pd.read_csv(csv_path)
     df['address'] = df['address'].str.lower()

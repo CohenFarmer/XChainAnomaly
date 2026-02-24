@@ -1,3 +1,4 @@
+#alchemy blockchain api client wrapper
 from web3 import Web3
 import os
 from dotenv import load_dotenv
@@ -5,7 +6,9 @@ import requests
 
 load_dotenv()
 
+#client for interacting with alchemy api
 class alchemyClient:
+    #sets up web3 connection and api credentials
     def __init__(self, mainnet):
         self.alchemy_api_key = os.getenv("ALCHEMY_API_KEY")
         self.mainnet = mainnet
@@ -18,10 +21,12 @@ class alchemyClient:
     
         self.price_cache = {}
     
+    #checks if address is a smart contract
     def is_contract(self, address: str) -> bool:
         code = self.w3.eth.get_code(Web3.to_checksum_address(address))
         return code != b''
     
+    #gets historical usd price for a token with caching
     def get_usd_price(self, symbol: str, start_ts, end_ts):
         cache_key = None
         if isinstance(start_ts, str) and start_ts == end_ts:

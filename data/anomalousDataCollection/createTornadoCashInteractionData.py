@@ -1,9 +1,11 @@
+#collects addresses that deposited to tornado cash pools
 from data.dataExtraction import alchemyGetAddressTransfers
 import pandas as pd
 from data.anomalousDataCollection import constants
 
 getter = alchemyGetAddressTransfers.getAddressTransfers()
 all_from_addresses = set()
+#fetches all addresses that sent to tornado pools
 for tornado_address in constants.TORNADO_CASH_ADDRESSES_ETH:
     data = getter.fetch_transfers("ethereum", "to", to_address=tornado_address)
     transfers = data.get("transfers", [])

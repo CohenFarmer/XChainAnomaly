@@ -1,3 +1,4 @@
+#demo script for shap and llm based transaction explanations
 
 import numpy as np
 import pandas as pd
@@ -16,7 +17,7 @@ MODEL_PATH = 'machineLearning/models/multi_output_rf_model.joblib'
 USE_LLM = True  
 LLM_PROVIDER = "local"  
 
-
+#loads dataset and prepares features and labels
 def load_data():
 
     dataset = pd.read_csv('features/datasets/cross_chain_labeled_transactions_enriched_probs_v3.csv')
@@ -36,7 +37,7 @@ def load_data():
     
     return X, y, dataset
 
-
+#trains multi output random forest with balanced weights
 def train_model(X_train, y_train):
     
     print("Training Model 3 (Multi-Output Random Forest)...")
@@ -60,7 +61,7 @@ def train_model(X_train, y_train):
     
     return model
 
-
+#returns llm explainer based on configured provider
 def get_llm_explainer():
 
     if LLM_PROVIDER == "openai":
@@ -83,7 +84,7 @@ def get_llm_explainer():
     else:
         raise ValueError(f"Unknown LLM provider: {LLM_PROVIDER}")
 
-
+#runs explainability demo with interactive mode
 def main():
     print("Loading data...")
     X, y, dataset = load_data()

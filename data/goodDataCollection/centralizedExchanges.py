@@ -1,22 +1,18 @@
-#this file is used to generate the data for all centralized exchanges
-#cctx can then be compared against this list, to find
-#good transactions
-
+#finds addresses that have interacted with centralized exchanges
 import json
 import pandas as pd
 from data.dataExtraction import alchemyGetAddressTransfers
 
-# Collect addresses that have interacted with centralized exchanges
 cexExchangesInteractions = pd.DataFrame(columns=['address', 'blockchain', 'label'])
 
 with open('data/datasets/cexHotWallets.json', 'r') as f:
     data = json.load(f)
 
-# Normalize helper
+#normalizes address to lowercase
 def norm(addr: str) -> str:
     return str(addr).strip().lower()
 
-# Flatten and normalize CEX addresses into a set for fast membership checks
+#builds set of cex addresses for fast lookup
 cex_set = set()
 addr_to_exchange = {}
 for ex in data:
@@ -38,6 +34,7 @@ for index, row in good_df.iterrows():
     chain = row['blockchain']
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+#checks if address has sent to or received from cex
 def check_address(row):
     address = row['address']
     chain = row['blockchain']
@@ -57,6 +54,7 @@ def check_address(row):
     return None
 
 max_workers = 8
+#processes addresses in parallel
 with ThreadPoolExecutor(max_workers=max_workers) as executor:
     futures = {executor.submit(check_address, row): i for i, row in good_df.iterrows()}
     for idx, f in enumerate(as_completed(futures)):

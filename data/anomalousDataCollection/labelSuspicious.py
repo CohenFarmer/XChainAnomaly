@@ -1,3 +1,4 @@
+#finds addresses with one hop connections to tornado cash
 import pandas as pd
 from data.anomalousDataCollection.tornadoCashInteraction import tornadoInteraction
 from data.dataExtraction.alchemyGetAddressTransfers import getAddressTransfers
@@ -8,6 +9,7 @@ getAddrTx = getAddressTransfers()
 df = pd.read_parquet('data/datasets/cross_chain_unified.parquet', engine='pyarrow')
 
 all_tornado_interactions = set()
+#checks transaction counterparties for tornado connections
 for index, row in df.iterrows():
     addr = None
     if row['src_blockchain'].lower() == 'ethereum':

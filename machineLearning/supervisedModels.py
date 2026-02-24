@@ -1,3 +1,4 @@
+#model training and testing functions for classification
 import numpy as np
 import xgboost as xgb
 import pandas as pd
@@ -7,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+#trains xgboost classifier with specified hyperparameters
 def train_xgboost_model(X_train, y_train, sample_weights=None, binary=True):
     objective = 'binary:logistic' if binary else 'multi:softprob'
     model = xgb.XGBClassifier(
@@ -24,6 +26,7 @@ def train_xgboost_model(X_train, y_train, sample_weights=None, binary=True):
     model.fit(X_train, y_train, sample_weight=sample_weights)
     return model
 
+#trains random forest classifier
 def train_random_forest_model(X_train, y_train, sample_weights=None, binary=True):
 
     model = RandomForestClassifier(
@@ -39,6 +42,7 @@ def train_random_forest_model(X_train, y_train, sample_weights=None, binary=True
     model.fit(X_train, y_train, sample_weight=sample_weights)
     return model
 
+#trains logistic regression with scaling
 def train_logistic_regression_model(X_train, y_train, sample_weights=None, binary=True):
 
     logreg = LogisticRegression(
@@ -59,6 +63,7 @@ def train_logistic_regression_model(X_train, y_train, sample_weights=None, binar
         pipe.fit(X_train, y_train)
     return pipe
 
+#evaluates model and prints metrics
 def test_model(model, X_test, y_test, binary: bool | None = None, threshold: float = 0.5):
     classes = np.unique(y_test)
     if binary is None:

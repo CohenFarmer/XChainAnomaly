@@ -1,3 +1,4 @@
+#extracts withdrawal events from tornado cash pool contracts
 from web3 import Web3
 from data.anomalousDataCollection import constants
 
@@ -5,6 +6,7 @@ w3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/c945bf50f6564254ad8fc1
 
 WITHDRAWAL_TOPIC = "0xe9e508bad6d4c3227e881ca19068f099da81b5164dd6d62b2eaf1e8bc6c34931"
 
+#fetches withdrawal recipients in block chunks to avoid timeouts
 def fetch_withdrawal_recipients_chunked(pool_address: str, start_block: int = 0, end_block: int | str = 'latest', chunk_size: int = 100_000):
     if end_block == 'latest':
         end_block = w3.eth.block_number

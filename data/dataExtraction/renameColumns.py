@@ -1,5 +1,7 @@
+#column renaming functions for different bridge protocols
 bridgeRenameColumns = {'stargate':1, 'across':0, 'ccio':1}
 
+#renames stargate columns to standard format
 def rename_stargate_columns(stargate_df):
     df = stargate_df.rename(columns={
         'user_transaction_hash': 'src_transaction_hash',
@@ -14,24 +16,17 @@ def rename_stargate_columns(stargate_df):
         'amount_received_ld_usd' : 'output_amount_usd',
         'passenger': 'recipient'
     })
-    # Stargate uses src_from_address as the depositor
     df['depositor'] = df['src_from_address']
     return df
 
-
+#renames ccio columns to standard format
 def rename_ccio_columns(ccio_df):
-    """
-    CCIO column mapping to unified format.
-    CCIO already uses standard column names, only amount columns need renaming.
-    """
     df = ccio_df.rename(columns={
         'amount': 'input_amount',
         'amount_usd': 'input_amount_usd',
     })
-    # Add dst_contract_address if not present
     if 'dst_contract_address' not in df.columns:
         df['dst_contract_address'] = None
-    # CCIO doesn't have separate output amounts, use input as output
     df['output_amount'] = df['input_amount']
     df['output_amount_usd'] = df['input_amount_usd']
     return df

@@ -1,8 +1,11 @@
+#fetches address transfer history from alchemy api
 import os
 import requests
 from dotenv import load_dotenv
 
+#handles fetching transfer data for addresses
 class getAddressTransfers:
+    #sets up api credentials and request headers
     def __init__(self, timeout: int = 30):
         self.alchemy_api_key = self.get_alchemy_api_key()
         self.headers = {
@@ -11,10 +14,12 @@ class getAddressTransfers:
         }
         self.timeout = timeout
     
+    #loads api key from env
     def get_alchemy_api_key(self):
         load_dotenv()
         return os.getenv("ALCHEMY_API_KEY")
 
+    #fetches single page of transfers with pagination
     def fetch_page_transfers(self, pagekey: int, payload, chain_id: str):
         payload["params"][0]["pageKey"] = pagekey
         resp = requests.post(f"https://{chain_id}.g.alchemy.com/v2/{self.alchemy_api_key}", headers=self.headers, json=payload, timeout=30)
@@ -22,6 +27,7 @@ class getAddressTransfers:
         data = resp.json()
         return data
     
+    #converts chain name to alchemy chain id
     def chain_name_to_id(self, chain: str) -> str:
         chain_ids = {
             "ethereum": "eth-mainnet",
@@ -32,6 +38,7 @@ class getAddressTransfers:
         }
         return chain_ids.get(chain)
 
+    #fetches all transfers for an address with pagination
     def fetch_transfers(self, chain: str, from_to_both: str, from_address: str = None, to_address: str = None) -> dict:
         chain_id = self.chain_name_to_id(chain)
         payload = {

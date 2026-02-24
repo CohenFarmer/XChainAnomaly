@@ -1,3 +1,4 @@
+#enriches transaction data with address classification probabilities
 import pandas as pd
 import numpy as np
 import joblib
@@ -12,6 +13,7 @@ if 'source_index' not in cctx_tx_data.columns:
 	cctx_tx_data['source_index'] = cctx_tx_data.index
 cctx_tx_features = pd.read_csv('features/datasets/cctx_transfer_features.csv')
 
+#splits features by role
 cctx_src_from_tx_data = cctx_tx_features[cctx_tx_features['role'] == 'src_from']
 cctx_recipient_tx_data = cctx_tx_features[cctx_tx_features['role'] == 'recipient']
 
@@ -23,6 +25,7 @@ print(cctx_recipient_tx_data.head(10))
 
 print(len(cctx_src_from_tx_data), len(cctx_recipient_tx_data), len(cctx_tx_data))
 
+#loads trained address classifier
 rf_model = joblib.load('machineLearning/models/random_forest_address_transfer_model_eth_3.joblib')
 
 src_indices = cctx_src_from_tx_data['source_index'].to_numpy()
@@ -34,6 +37,7 @@ rec_address = cctx_recipient_tx_data['address'].to_numpy()
 X_src_from = cctx_src_from_tx_data.drop(columns=['address', 'label', 'role', 'source_index'])
 X_recipient = cctx_recipient_tx_data.drop(columns=['address', 'label', 'role', 'source_index'])
 
+#predicts class probabilities for addresses
 y_pred_src_from = rf_model.predict_proba(X_src_from)
 y_prec_recipient = rf_model.predict_proba(X_recipient)
 
@@ -55,6 +59,7 @@ print(cctx_tx_data.head())
 src_probs = results_src.drop(columns=['address'])
 rec_probs = results_rec.drop(columns=['address'])
 
+#merges probabilities into transaction data
 enriched = (
 	cctx_tx_data
 		.merge(src_probs, on='source_index', how='left')
